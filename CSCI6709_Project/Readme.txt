@@ -10,9 +10,9 @@ There are following instructions might need take to run the Demo:
 
 5. In mininet, call xterm h1, xterm h2, xterm h3 to access three hosts
 
-6. Under host1 go to folder client, run: python3 server1.py (To enbale the aggregrator).
+6. Under host1 go to folder server, run: python3 server1.py (To enbale the aggregrator).
 
-7. Under host2, go to folder server, run: python3 client1.py (To enbale the worker1).
+7. Under host2, go to folder client, run: python3 client1.py (To enbale the worker1).
 
 8. Under host3 go to folder client, run: python3 client2.py (To enbale the worker2).
 
