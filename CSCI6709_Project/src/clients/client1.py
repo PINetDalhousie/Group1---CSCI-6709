@@ -358,10 +358,10 @@ loss_fun = nn.CrossEntropyLoss()
 model_dnn = NeuralNetwork()
 optimizer = torch.optim.SGD(model_dnn.parameters(), lr=1e-3)
 
-client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=1)
+client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=10)
 
 
 fl.client.start_numpy_client(
-    server_address = "10.0.0.2:8080",
+    server_address = "10.0.0.1:8080",
     client=client1,
 )
