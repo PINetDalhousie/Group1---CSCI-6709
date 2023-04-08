@@ -44,7 +44,7 @@ def read_csv_files(path_name):
 
 # df_processed_list[0]
 
-df_processed = read_csv_files("../../dataset/Processed_Dataset/client5_processed.csv")
+df_processed = read_csv_files("../../new_dataset/new_client5.csv")
 df_processed
 
 # Split the dataframe to train and test for each client the ratio is 80% for training and 20% for testing
@@ -345,6 +345,9 @@ class FlowerClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         set_parameters(self.net, parameters)
+        
+        torch.save(self.net.state_dict(), 'model5_new.pt')
+        
         loss, accuracy = test(self.valloader, self.net, self.loss_func)
         return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
 
