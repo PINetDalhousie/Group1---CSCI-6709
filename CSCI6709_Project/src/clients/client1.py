@@ -44,7 +44,9 @@ def read_csv_files(path_name):
 
 # df_processed_list[0]
 
-df_processed = read_csv_files("../../new_dataset/new_client1.csv")
+
+df_processed = read_csv_files("../../dataset/Processed_Dataset/client1.csv")
+#df_processed = read_csv_files("../../new_dataset/new_client1.csv")
 df_processed
 
 # Split the dataframe to train and test for each client the ratio is 80% for training and 20% for testing
