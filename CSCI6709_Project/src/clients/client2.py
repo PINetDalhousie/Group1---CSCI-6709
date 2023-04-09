@@ -58,7 +58,7 @@ df_client_train_ori
 # For traning dataset drop the data belong the the specific target to simulate unknown attack
 # (Traning does not no the target but testing we will test it)
 
-df_client_train = df_client_train_ori[df_client_train_ori['target'] != 0].reset_index(drop=True)
+df_client_train = df_client_train_ori[df_client_train_ori['target'] != 1].reset_index(drop=True)
 df_client_train
 
 plt.subplot(2, 2, 1)

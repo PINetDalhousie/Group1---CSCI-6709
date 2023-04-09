@@ -345,7 +345,7 @@ class FlowerClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         set_parameters(self.net, parameters)
-        torch.save(self.net.state_dict(), 'mode2_new.pt')
+        torch.save(self.net.state_dict(), 'mode1_new.pt')
         loss, accuracy = test(self.valloader, self.net, self.loss_func)
         return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
 
