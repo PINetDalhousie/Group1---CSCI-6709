@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # Citation: the code is based on templates from tutorial.
-# Code modified by Nathan
 
 from ryu.base import app_manager
 from ryu.ofproto import ofproto_v1_3
@@ -12,13 +11,13 @@ from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
 
 from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet, ipv4
+from ryu.lib.packet import ethernet
 
 import networkx as nx
 
+
 class Controller1(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-    
 
     def __init__(self, *args, **kwargs):
         super(Controller1, self).__init__(*args, **kwargs)
@@ -31,7 +30,6 @@ class Controller1(app_manager.RyuApp):
         switches = [switch.dp.id for switch in switch_list]
         self.net.add_nodes_from(switches)
 
-        #print("TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
         link_list = get_link(self.topology_api_app, None)
 
         for link in link_list:
@@ -44,7 +42,6 @@ class Controller1(app_manager.RyuApp):
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        
 
         # Add default rule
         match = parser.OFPMatch()
@@ -61,47 +58,27 @@ class Controller1(app_manager.RyuApp):
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocol(ethernet.ethernet)
-        ip_data = pkt.get_protocol(ipv4.ipv4)
-        #print(ip_data)
-        
-        if ip_data is None:
-        	#print("No IPV4 Header present, ignoring packet")
-            return
-
-	
 
         dpid = datapath.id
         src = eth.src
         dst = eth.dst
-        ip_src = ip_data.src
-        ip_dst = ip_data.dst
-        
-        print(self.net)
-        
-        
-        
 
         # Add end hosts to discovered topo
-        if ip_src not in self.net:
-        
-
-            self.net.add_node(ip_src)
-
-            self.net.add_edge(dpid, ip_src, port=msg.match['in_port'])
-
-            self.net.add_edge(ip_src, dpid)
-                    
+        if src not in self.net:
+            self.net.add_node(src)
+            self.net.add_edge(dpid, src, port=msg.match['in_port'])
+            self.net.add_edge(src, dpid)
 
             print(">>>> Nodes <<<<")
             print(self.net.nodes())
             print(">>>> Edges <<<<")
             print(self.net.edges())
 
-        elif ip_src in self.net and ip_dst in self.net:
+        elif src in self.net and dst in self.net:
             print(">>>> Add your logic here <<<<")
 
             # Find the shortest path and store on a list.
-            path_list = nx.shortest_path(self.net, source=ip_src, target=ip_dst)
+            path_list = nx.shortest_path(self.net, source=src, target=dst, weight=None, method='dijkstra')
 
             # Find next hop of the forwarding path.
             next_hop = path_list[path_list.index(dpid) + 1]
@@ -109,15 +86,16 @@ class Controller1(app_manager.RyuApp):
             parser = datapath.ofproto_parser
 
             # Destination on flow table should match to the final destination.
-            match = parser.OFPMatch(ipv4_dst=ip_dst, eth_type=0x0800)
+            match = parser.OFPMatch(eth_dst=dst)
 
             # Find out port for next hop.
             out_port = self.net[dpid][next_hop]['port']
+
             action_forward = [parser.OFPActionOutput(out_port)]
 
             # Add forwarding rule to flow table and set priority to 1.
             self.add_flow(datapath, 1, match, action_forward)
-            print("Added rule: eth=", ip_dst, " out_port=", out_port)
+            print("Added rule: eth=", dst, " out_port=", out_port)
 
             # Find switch id for source and destination
             src_id = path_list[1]
@@ -126,7 +104,8 @@ class Controller1(app_manager.RyuApp):
             # Forward original packet
             parser = datapath.ofproto_parser
 
-            out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.match['in_port'],actions=action_forward)
+            out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.match['in_port'],
+                                      actions=action_forward)
             datapath.send_msg(out)
 
 
@@ -142,16 +121,6 @@ class Controller1(app_manager.RyuApp):
                                 match=match, instructions=inst)
 
         datapath.send_msg(mod)
-
-
-
-
-
-
-
-
-
-
 
 
 
