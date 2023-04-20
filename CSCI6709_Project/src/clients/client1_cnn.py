@@ -31,7 +31,21 @@ def read_csv_files(path_name):
     df_ori = pd.read_csv(path_name)
     return df_ori
 
+# # Achieve list of name for all csv files
+# g = os.walk("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset")
+# file_path_list = []
+# df_processed_list = []
+# for path,dir_list,file_list in g:
+#     file_list.sort()
+#     for j in range(len(file_list)):
+#         print(file_list[j])
+#         df_processed = read_csv_files("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset/" + file_list[j])
+#         df_processed_list.append(df_processed)
 
+# df_processed_list[0]
+
+
+#df_processed = read_csv_files("../../dataset/Processed_Dataset/client1.csv")
 df_processed = read_csv_files("../../new_dataset/new_client1.csv")
 df_processed
 
@@ -39,6 +53,8 @@ df_processed
 
 df_client_train_ori, df_client_test_ori = train_test_split(df_processed, train_size=0.8, random_state=42, stratify=df_processed['target'])
 
+
+# Set up zero-day attack situation
 df_client_test = df_client_test_ori.reset_index(drop=True)
 
 df_client_train_ori
@@ -47,7 +63,7 @@ df_client_train_ori
 # (Traning does not no the target but testing we will test it)
 
 #df_client_train = df_client_train_ori[df_client_train_ori['target'] != 0].reset_index(drop=True)
-df_client_train
+df_client_train = df_client_train_ori
 
 plt.subplot(2, 2, 1)
 plt.title("Train label distribution client1", fontsize=10)
@@ -103,29 +119,31 @@ test_loader_client = torch.utils.data.DataLoader(ds_torch_test_client, batch_siz
 
 train_loader_client
 
+from torch.nn.modules.pooling import MaxPool1d
 import torch.nn as nn
 class NeuralNetwork(nn.Module):
     def __init__(self):
-        super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(115, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 5),
-            nn.Softmax(dim=1)
+        super(NeuralNetwork, self).__init__()
+        self. model1 = nn.Sequential(
+        nn.Conv2d(in_channels=1, out_channels=28, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=28, out_channels=56, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=56, out_channels=112, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Flatten(),
+        nn.Linear(112 * 1 * 115, 54),
+        nn.Linear(54, 5)
         )
-    def forward(self, features):
-        x = self.flatten(features)
-        logits = self.linear_relu_stack(x)
-        return logits
+
+    def forward(self, x):
+        x = x.reshape(12, 1, 1, 115)
+        x = self.model1(x)
+        return x
+
 
 print(NeuralNetwork().to('cpu'))
 
@@ -204,6 +222,7 @@ def display_evaluation(eval_list):
 
 # Function to train the model
 # Citation:
+
 def train(dataloader, model, loss_fn, optimizer, epoch):
     for i in range(epoch):
         model.train()
@@ -218,7 +237,6 @@ def train(dataloader, model, loss_fn, optimizer, epoch):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
 
 # Function to test the model
 # Citations: 
@@ -313,7 +331,7 @@ def set_parameters(net, parameters):
     net.load_state_dict(state_dict, strict=True)
 
 
-# Citation:
+
 class FlowerClient(fl.client.NumPyClient):
     def __init__(self, net, trainloader, valloader, loss_func, optimizer, epoch):
         self.net = net
@@ -331,12 +349,6 @@ class FlowerClient(fl.client.NumPyClient):
         train(self.trainloader, self.net, self.loss_func, self.optimizer, self.epoch)
         return get_parameters(self.net), len(self.trainloader), {}
 
-    def evaluate(self, parameters, config):
-        set_parameters(self.net, parameters)
-        torch.save(self.net.state_dict(), 'mode1_new.pt')
-        loss, accuracy = test(self.valloader, self.net, self.loss_func)
-        return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
-
 
 from torch.optim import optimizer
 
@@ -347,7 +359,7 @@ loss_fun = nn.CrossEntropyLoss()
 model_dnn = NeuralNetwork()
 optimizer = torch.optim.SGD(model_dnn.parameters(), lr=1e-3)
 
-client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=10)
+client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=1)
 
 
 fl.client.start_numpy_client(

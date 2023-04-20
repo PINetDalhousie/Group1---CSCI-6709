@@ -31,8 +31,22 @@ def read_csv_files(path_name):
     df_ori = pd.read_csv(path_name)
     return df_ori
 
+# # Achieve list of name for all csv files
+# g = os.walk("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset")
+# file_path_list = []
+# df_processed_list = []
+# for path,dir_list,file_list in g:
+#     file_list.sort()
+#     for j in range(len(file_list)):
+#         print(file_list[j])
+#         df_processed = read_csv_files("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset/" + file_list[j])
+#         df_processed_list.append(df_processed)
 
-df_processed = read_csv_files("../../new_dataset/new_client1.csv")
+# df_processed_list[0]
+
+
+#df_processed = read_csv_files("../../dataset/Processed_Dataset/client3.csv")
+df_processed = read_csv_files("../../new_dataset/new_client3.csv")
 df_processed
 
 # Split the dataframe to train and test for each client the ratio is 80% for training and 20% for testing
@@ -46,8 +60,8 @@ df_client_train_ori
 # For traning dataset drop the data belong the the specific target to simulate unknown attack
 # (Traning does not no the target but testing we will test it)
 
-#df_client_train = df_client_train_ori[df_client_train_ori['target'] != 0].reset_index(drop=True)
-df_client_train
+#df_client_train = df_client_train_ori[df_client_train_ori['target'] != 2].reset_index(drop=True)
+df_client_train = df_client_train_ori
 
 plt.subplot(2, 2, 1)
 plt.title("Train label distribution client1", fontsize=10)
@@ -103,29 +117,31 @@ test_loader_client = torch.utils.data.DataLoader(ds_torch_test_client, batch_siz
 
 train_loader_client
 
+from torch.nn.modules.pooling import MaxPool1d
 import torch.nn as nn
 class NeuralNetwork(nn.Module):
     def __init__(self):
-        super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(115, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 5),
-            nn.Softmax(dim=1)
+        super(NeuralNetwork, self).__init__()
+        self. model1 = nn.Sequential(
+        nn.Conv2d(in_channels=1, out_channels=28, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=28, out_channels=56, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=56, out_channels=112, kernel_size=1),
+        nn.MaxPool2d(kernel_size=1),
+        nn.ReLU(),
+        nn.Flatten(),
+        nn.Linear(112 * 1 * 115, 54),
+        nn.Linear(54, 5)
         )
-    def forward(self, features):
-        x = self.flatten(features)
-        logits = self.linear_relu_stack(x)
-        return logits
+
+    def forward(self, x):
+        x = x.reshape(12, 1, 1, 115)
+        x = self.model1(x)
+        return x
+
 
 print(NeuralNetwork().to('cpu'))
 
@@ -333,7 +349,9 @@ class FlowerClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         set_parameters(self.net, parameters)
-        torch.save(self.net.state_dict(), 'mode1_new.pt')
+        
+        torch.save(self.net.state_dict(), 'model3_new.pt')
+        
         loss, accuracy = test(self.valloader, self.net, self.loss_func)
         return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
 
@@ -347,7 +365,7 @@ loss_fun = nn.CrossEntropyLoss()
 model_dnn = NeuralNetwork()
 optimizer = torch.optim.SGD(model_dnn.parameters(), lr=1e-3)
 
-client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=10)
+client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=1)
 
 
 fl.client.start_numpy_client(

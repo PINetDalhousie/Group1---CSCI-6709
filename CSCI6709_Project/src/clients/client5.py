@@ -31,19 +31,6 @@ def read_csv_files(path_name):
     df_ori = pd.read_csv(path_name)
     return df_ori
 
-# # Achieve list of name for all csv files
-# g = os.walk("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset")
-# file_path_list = []
-# df_processed_list = []
-# for path,dir_list,file_list in g:
-#     file_list.sort()
-#     for j in range(len(file_list)):
-#         print(file_list[j])
-#         df_processed = read_csv_files("/content/drive/MyDrive/dataset/N-BaIoT/ProcessedDataset/" + file_list[j])
-#         df_processed_list.append(df_processed)
-
-# df_processed_list[0]
-
 df_processed = read_csv_files("../../new_dataset/new_client5.csv")
 df_processed
 
@@ -58,7 +45,7 @@ df_client_train_ori
 # For traning dataset drop the data belong the the specific target to simulate unknown attack
 # (Traning does not no the target but testing we will test it)
 
-df_client_train = df_client_train_ori[df_client_train_ori['target'] != 4].reset_index(drop=True)
+#df_client_train = df_client_train_ori[df_client_train_ori['target'] != 4].reset_index(drop=True)
 df_client_train
 
 plt.subplot(2, 2, 1)
