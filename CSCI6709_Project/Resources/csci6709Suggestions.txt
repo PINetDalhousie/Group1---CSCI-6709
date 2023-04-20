@@ -1,0 +1,14 @@
+when doing security work:
+ talk about model - what would be secure and insecure in our design. since its on gateways - is gateway secure device? explain to audience, first paper assumed that gateway was part of network and not need to worry about security
+
+measured communication overhead, but his suggestion is its presented in overall bytes, he is interested in bandwidth of the number of bytes over time. 
+ 1. thats the normal number that people careabout in distributed fassion. 
+ 2. curious how it develops over time. higher consumption at start/end or when model is converging? 
+    provide as a time series as its more useful. 
+    israat --> standard how much distribution you save by model.
+    
+
+
+switch and server why not in controller.
+
+parameter tuning --> discuss why we have 10 epochs.
