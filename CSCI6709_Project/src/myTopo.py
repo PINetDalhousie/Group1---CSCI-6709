@@ -16,14 +16,16 @@ class create_topo(Topo):
 
         switch_list = []
 
-        for i in range(1, 4):
+        for i in range(1, 7):
             host = self.addHost('h' + str(i))
             switch = self.addSwitch('s' + str(i))
             switch_list.append(switch)
             self.addLink(host, switch)
 
-        self.addLink(switch_list[0], switch_list[1])
-        self.addLink(switch_list[1], switch_list[2])
+        
+        for i in range(1, 6):
+            self.addLink(switch_list[0], switch_list[i])
+        
 
 
 def runner():

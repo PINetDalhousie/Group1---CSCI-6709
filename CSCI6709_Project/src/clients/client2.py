@@ -44,7 +44,7 @@ def read_csv_files(path_name):
 
 # df_processed_list[0]
 
-df_processed = read_csv_files("../../dataset/Processed_Dataset/client2_processed.csv")
+df_processed = read_csv_files("../../new_dataset/new_client2.csv")
 df_processed
 
 # Split the dataframe to train and test for each client the ratio is 80% for training and 20% for testing
@@ -58,7 +58,7 @@ df_client_train_ori
 # For traning dataset drop the data belong the the specific target to simulate unknown attack
 # (Traning does not no the target but testing we will test it)
 
-df_client_train = df_client_train_ori[df_client_train_ori['target'] != 0].reset_index(drop=True)
+df_client_train = df_client_train_ori[df_client_train_ori['target'] != 1].reset_index(drop=True)
 df_client_train
 
 plt.subplot(2, 2, 1)
@@ -341,10 +341,14 @@ class FlowerClient(fl.client.NumPyClient):
     def fit(self, parameters, config):
         set_parameters(self.net, parameters)
         train(self.trainloader, self.net, self.loss_func, self.optimizer, self.epoch)
+        
         return get_parameters(self.net), len(self.trainloader), {}
 
     def evaluate(self, parameters, config):
         set_parameters(self.net, parameters)
+        
+        torch.save(self.net.state_dict(), 'model2_new.pt')
+        
         loss, accuracy = test(self.valloader, self.net, self.loss_func)
         return float(loss), len(self.valloader), {"accuracy": float(accuracy)}
 
@@ -358,10 +362,10 @@ loss_fun = nn.CrossEntropyLoss()
 model_dnn = NeuralNetwork()
 optimizer = torch.optim.SGD(model_dnn.parameters(), lr=1e-3)
 
-client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=1)
+client1 = FlowerClient(model_dnn, trainloader, valloader, loss_fun, optimizer, epoch=10)
 
 
 fl.client.start_numpy_client(
-    server_address = "10.0.0.2:8080",
+    server_address = "10.0.0.1:8080",
     client=client1,
 )
